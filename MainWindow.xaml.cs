@@ -1,57 +1,32 @@
-﻿using MilkApp.Properties;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-namespace MilkApp
+using TestApp;
+
+namespace TestApp
 {
     public partial class MainWindow : Window
     {
-        private readonly MilkEntities db = new MilkEntities();
+        private readonly TestEntities db = new TestEntities();
         private readonly List<int> captchaOrder = new List<int>();
 
         public MainWindow()
         {
             InitializeComponent();
-            InitializeDatabaseIfEmpty();
         }
 
-        private void InitializeDatabaseIfEmpty()
+        private void Captcha_Click(object sender, MouseButtonEventArgs e)
         {
-            if (!db.Role.Any())
+            if (sender is Image img && int.TryParse(img.Tag?.ToString(), out int num))
             {
-                db.Role.Add(new Role { Name = "Пользователь" });
-                db.Role.Add(new Role { Name = "Администратор" });
-                db.SaveChanges();
-            }
-
-            if (!db.User.Any())
-            {
-                var userRole = db.Role.First(r => r.Name == "Пользователь");
-                var adminRole = db.Role.First(r => r.Name == "Администратор");
-
-                db.User.Add(new User { Login = "user", Password = "123", Role_Id = 2, IsBlocked = false });
-                db.User.Add(new User { Login = "admin", Password = "123", Role_Id = 1, IsBlocked = false });
-                db.SaveChanges();
-            }
-        }
-
-        private void CaptchaImage_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (sender is System.Windows.Controls.Image img)
-            {
-                if (int.TryParse(img.Tag?.ToString(), out int number))
+                if (!captchaOrder.Contains(num))
                 {
-                    if (!captchaOrder.Contains(number))
-                    {
-                        captchaOrder.Add(number);
-                        txtCaptchaStatus.Text = $"Выбранный порядок: {string.Join(" → ", captchaOrder)}";
-
-                        // Визуальная обратная связь (опционально, но очень помогает)
-                        img.Opacity = 0.7;
-                    }
+                    captchaOrder.Add(num);
+                    txtCaptcha.Text = $"Выбранный порядок: {string.Join(" → ", captchaOrder)}";
+                    img.Opacity = 0.55;
                 }
             }
         }
@@ -60,68 +35,52 @@ namespace MilkApp
         {
             if (captchaOrder.Count != 4 || !captchaOrder.SequenceEqual(new[] { 1, 2, 3, 4 }))
             {
-                MessageBox.Show("Неверный порядок капчи. Попробуйте снова.", "Ошибка капчи", MessageBoxButton.OK, MessageBoxImage.Warning);
-                captchaOrder.Clear();
-                CaptchaStatusText.Text = "Выбранный порядок: (пусто)";
+                MessageBox.Show("Неверный порядок капчи!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ResetCaptcha();
                 return;
             }
 
             string login = LoginTextBox.Text.Trim();
-            string password = PasswordBox.Password;
+            string pass = PasswordBox.Password;
 
-            if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password))
+            if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(pass))
             {
-                MessageBox.Show("Заполните все поля. Логин и пароль не могут быть пустыми.", "Ошибка ввода", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Введите логин и пароль");
                 return;
             }
 
-            if (login.Length < 3)
+            var user = db.User.FirstOrDefault(u => u.Login == login && u.Password == pass);
+
+            if (user == null)
             {
-                MessageBox.Show("Логин должен быть минимум 3 символа. Исправьте и попробуйте снова.", "Ошибка ввода", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Неверный логин или пароль");
+                ResetCaptcha();
                 return;
             }
 
-            try
+            if (user.IsBlocked == true)
             {
-                var user = db.User.FirstOrDefault(u => u.Login == login && u.Password == password);
-
-                if (user == null)
-                {
-                    MessageBox.Show("Неверный логин или пароль. Проверьте данные и попробуйте снова.", "Ошибка авторизации", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                if (user.IsBlocked)
-                {
-                    MessageBox.Show("Ваш аккаунт заблокирован. Обратитесь к администратору.", "Доступ запрещен", MessageBoxButton.OK, MessageBoxImage.Stop);
-                    return;
-                }
-
-                MessageBox.Show("Авторизация успешна!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                // Разграничение прав через switch (первый вариант)
-                switch (user.Role.Name)
-                {
-                    case "Администратор":
-                        new AdminWindow().Show();
-                        Close();
-                        break;
-                    case "Пользователь":
-                        new UserWindow().Show();
-                        Close();
-                        break;
-                    default:
-                        MessageBox.Show("Неизвестная роль. Обратитесь к администратору.", "Ошибка роли", MessageBoxButton.OK, MessageBoxImage.Error);
-                        break;
-                }
-            }
-            catch
-            {
-                MessageBox.Show("Ошибка подключения к базе данных. Проверьте соединение и попробуйте снова.", "Критическая ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Аккаунт заблокирован!", "Доступ запрещён");
+                ResetCaptcha();
+                return;
             }
 
+            MessageBox.Show($"Добро пожаловать, {user.Login}!");
+
+            if (user.Role?.Name == "Администратор")
+                new AdminWindow().Show();
+            else
+                new UserWindow().Show();
+
+            Close();
+        }
+
+        private void ResetCaptcha()
+        {
             captchaOrder.Clear();
-            CaptchaStatusText.Text = "Выбранный порядок: (пусто)";
+            txtCaptcha.Text = "Выбранный порядок: —";
+
+            var grid = VisualTreeHelper.GetChild(this.Content as DependencyObject, 0) as Grid;
         }
     }
 }
