@@ -1,41 +1,27 @@
-﻿using System.Collections.ObjectModel;
-using System.Data.Entity;
+﻿using System.Data.Entity;
 using System.Linq;
 using System.Windows;
 
-namespace MilkApp
+namespace TestApp
 {
     public partial class AdminWindow : Window
     {
-        private readonly MilkEntities db = new MilkEntities();
-        public ObservableCollection<User> Users { get; set; } = new ObservableCollection<User>();
-        public ObservableCollection<Role> Roles { get; set; } = new ObservableCollection<Role>();
+        private readonly TestEntities db = new TestEntities();
 
         public AdminWindow()
         {
             InitializeComponent();
-            LoadData();
-            DataContext = this;
+            LoadUsers();
         }
 
-        private void LoadData()
+        private void LoadUsers()
         {
             db.User.Load();
-            db.Role.Load();
-            Users = db.User.Local;
-            Roles = db.Role.Local;
-            UserGrid.ItemsSource = Users;
+            dgUsers.ItemsSource = db.User.Local.ToBindingList();
         }
 
         private void AddUser_Click(object sender, RoutedEventArgs e)
         {
-            var defaultRole = Roles.FirstOrDefault(r => r.Name == "Пользователь");
-            if (defaultRole == null)
-            {
-                MessageBox.Show("Роль 'Пользователь' не найдена. Добавьте роли в БД.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
             var newUser = new User
             {
                 Login = "new_user",
@@ -43,36 +29,47 @@ namespace MilkApp
                 Role_Id = 2,
                 IsBlocked = false
             };
+
             db.User.Add(newUser);
-            Users.Add(newUser);
-            MessageBox.Show("Новый пользователь добавлен. Сохраните изменения.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+            dgUsers.Items.Refresh();
+            MessageBox.Show("Новый пользователь добавлен.\nОтредактируйте данные и нажмите Сохранить.");
         }
 
         private void ToggleBlock_Click(object sender, RoutedEventArgs e)
         {
-            if (UserGrid.SelectedItem is User selectedUser)
+            if (dgUsers.SelectedItem is User user)
             {
-                selectedUser.IsBlocked = !selectedUser.IsBlocked;
-                UserGrid.Items.Refresh();
-                MessageBox.Show($"Пользователь {selectedUser.Login} теперь {(selectedUser.IsBlocked ? "заблокирован" : "разблокирован")}. Сохраните изменения.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+                user.IsBlocked = !user.IsBlocked;
+                dgUsers.Items.Refresh();
             }
             else
             {
-                MessageBox.Show("Выберите пользователя из таблицы.", "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Выберите пользователя в таблице");
             }
         }
 
-        private void SaveChanges_Click(object sender, RoutedEventArgs e)
+        private void Save_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 db.SaveChanges();
-                MessageBox.Show("Изменения сохранены успешно.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Изменения успешно сохранены в базу данных!", "Успех");
+            }
+            catch (System.Data.Entity.Validation.DbEntityValidationException ex)
+            {
+                MessageBox.Show("Ошибка валидации данных:\n" + ex.Message, "Ошибка");
             }
             catch
             {
-                MessageBox.Show("Ошибка сохранения. Проверьте данные (логин уникален, поля заполнены).", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Ошибка сохранения.\nВозможно, логин уже занят или данные некорректны.", "Ошибка");
             }
+        }
+
+        private void Refresh_Click(object sender, RoutedEventArgs e)
+        {
+            db.User.Load();
+            dgUsers.ItemsSource = db.User.Local.ToBindingList();
+            MessageBox.Show("Таблица обновлена");
         }
     }
 }
