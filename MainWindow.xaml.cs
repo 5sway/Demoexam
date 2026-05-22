@@ -1,10 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using TestApp;
 
 namespace TestApp
 {
@@ -18,42 +14,46 @@ namespace TestApp
             InitializeComponent();
         }
 
-        private void Captcha_Click(object sender, MouseButtonEventArgs e)
+        // ==================== КАПЧА ====================
+        private void Captcha1_Click(object sender, System.Windows.Input.MouseButtonEventArgs e) => AddToCaptcha(1);
+        private void Captcha2_Click(object sender, System.Windows.Input.MouseButtonEventArgs e) => AddToCaptcha(2);
+        private void Captcha3_Click(object sender, System.Windows.Input.MouseButtonEventArgs e) => AddToCaptcha(3);
+        private void Captcha4_Click(object sender, System.Windows.Input.MouseButtonEventArgs e) => AddToCaptcha(4);
+
+        private void AddToCaptcha(int number)
         {
-            if (sender is Image img && int.TryParse(img.Tag?.ToString(), out int num))
+            if (!captchaOrder.Contains(number))
             {
-                if (!captchaOrder.Contains(num))
-                {
-                    captchaOrder.Add(num);
-                    txtCaptcha.Text = $"Выбранный порядок: {string.Join(" → ", captchaOrder)}";
-                    img.Opacity = 0.55;
-                }
+                captchaOrder.Add(number);
+                txtCaptcha.Text = $"Выбранный порядок: {string.Join(" → ", captchaOrder)}";
             }
         }
 
+        // ==================== АВТОРИЗАЦИЯ ====================
         private void Login_Click(object sender, RoutedEventArgs e)
         {
             if (captchaOrder.Count != 4 || !captchaOrder.SequenceEqual(new[] { 1, 2, 3, 4 }))
             {
-                MessageBox.Show("Неверный порядок капчи!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Неверный порядок капчи!\nКликните по картинкам строго 1 → 2 → 3 → 4",
+                                "Ошибка капчи", MessageBoxButton.OK, MessageBoxImage.Warning);
                 ResetCaptcha();
                 return;
             }
 
             string login = LoginTextBox.Text.Trim();
-            string pass = PasswordBox.Password;
+            string password = PasswordBox.Password;
 
-            if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(pass))
+            if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password))
             {
-                MessageBox.Show("Введите логин и пароль");
+                MessageBox.Show("Введите логин и пароль", "Ошибка");
                 return;
             }
 
-            var user = db.User.FirstOrDefault(u => u.Login == login && u.Password == pass);
+            var user = db.User.FirstOrDefault(u => u.Login == login && u.Password == password);
 
             if (user == null)
             {
-                MessageBox.Show("Неверный логин или пароль");
+                MessageBox.Show("Неверный логин или пароль", "Ошибка авторизации");
                 ResetCaptcha();
                 return;
             }
@@ -65,7 +65,7 @@ namespace TestApp
                 return;
             }
 
-            MessageBox.Show($"Добро пожаловать, {user.Login}!");
+            MessageBox.Show($"Добро пожаловать, {user.Login}!", "Успех");
 
             if (user.Role?.Name == "Администратор")
                 new AdminWindow().Show();
@@ -79,8 +79,6 @@ namespace TestApp
         {
             captchaOrder.Clear();
             txtCaptcha.Text = "Выбранный порядок: —";
-
-            var grid = VisualTreeHelper.GetChild(this.Content as DependencyObject, 0) as Grid;
         }
     }
 }
