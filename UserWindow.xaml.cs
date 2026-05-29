@@ -23,7 +23,10 @@ namespace DemoExam
         {
             InitializeComponent();
         }
-
+        /// <summary>
+        /// Обработчик выхода из панели администратора.
+        /// Возвращает пользователя на форму авторизации.
+        /// </summary>
         private void ExitBtn_Click(object sender, RoutedEventArgs e)
         {
             new LoginWindow().Show();
