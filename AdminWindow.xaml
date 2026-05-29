@@ -1,32 +1,37 @@
-﻿<Window x:Class="TestApp.AdminWindow"
+﻿<Window x:Class="DemoExam.AdminWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Админ-панель" MinHeight="450" MaxHeight="500" MinWidth="920" MaxWidth="920"
-        WindowStartupLocation="CenterScreen">
-
-    <Grid Margin="10">
-        <DataGrid x:Name="dgUsers" 
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DemoExam"
+        mc:Ignorable="d"
+        Title="Панель Администратора" Height="450" Width="900" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+    <Grid Margin="15">
+        <DataGrid Name="dgUsers"
                   AutoGenerateColumns="False"
-                  IsReadOnly="False"
                   CanUserAddRows="False"
+                  IsReadOnly="False"
                   Margin="0,0,0,55">
-
             <DataGrid.Columns>
-                <DataGridTextColumn Header="ID" Binding="{Binding Id}" IsReadOnly="True" Width="50"/>
-                <DataGridTextColumn Header="Логин" Binding="{Binding Login}" Width="130"/>
-                <DataGridTextColumn Header="Пароль" Binding="{Binding Password}" Width="120"/>
+                <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="25" IsReadOnly="True"/>
                 <DataGridTextColumn Header="Имя" Binding="{Binding Name}" Width="100"/>
-                <DataGridTextColumn Header="Отчество" Binding="{Binding Last_Name}" Width="100"/>
+                <DataGridTextColumn Header="Отчество" Binding="{Binding First_Name}" Width="100"/>
+                <DataGridTextColumn Header="Фамилия" Binding="{Binding Last_Name}" Width="100"/>
+                <DataGridTextColumn Header="Логин" Binding="{Binding Login}" Width="100"/>
+                <DataGridTextColumn Header="Пароль" Binding="{Binding Password}" Width="100"/>
+                <DataGridTextColumn Header="Номер телефона" Binding="{Binding Phone_Number}" Width="100"/>
                 <DataGridTextColumn Header="Адрес" Binding="{Binding Address}" Width="100"/>
-                <DataGridTextColumn Header="Фамилия" Binding="{Binding First_Name}" Width="130"/>
-                <DataGridTextColumn Header="Роль ID" Binding="{Binding Role_Id}" Width="80"/>
-                <DataGridCheckBoxColumn Header="Заблокирован" Binding="{Binding IsBlocked}" Width="110"/>
+                <DataGridTextColumn Header="Роль" Binding="{Binding Role_Id}" Width="38"/>
+                <DataGridCheckBoxColumn Header="Заблокирован" Binding="{Binding IsBlocked}" Width="auto"/>
             </DataGrid.Columns>
         </DataGrid>
-
         <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Right">
-            <Button Content="Добавить" Width="120" Margin="5" Click="AddUser_Click"/>
-            <Button Content="Сохранить" Width="130" Margin="5" Click="Save_Click"/>
+            <Button Name="Exitbtn" Content="Выйти" Width="110" Height="25" Click="Exitbtn_Click" Margin="5"/>
+            <TextBlock Text="Чтобы удалить запись из таблицы необходимо выбрать ее чтобы она перекрасилась в синий и нажать на клавиатуре кнопку Delete/Del и нажать кнопку сохранить" Margin="5" TextWrapping="Wrap" Width="450"/>
+            <Button Name="Savebtn" Content="Сохранить" Width="120" Height="25" Click="Savebtn_Click" Margin="5"/>
+            <Button Name="Addbtn" Content="Добавить" Width="130" Height="25" Click="Addbtn_Click" Margin="5"/>
+
         </StackPanel>
+
     </Grid>
 </Window>

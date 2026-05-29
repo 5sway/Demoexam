@@ -12,16 +12,22 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace MilkApp
+namespace DemoExam
 {
     /// <summary>
-    /// Логика взаимодействия для UserWindow.xaml
+    /// Окно обычного пользователя после успешной авторизации.
     /// </summary>
     public partial class UserWindow : Window
     {
         public UserWindow()
         {
             InitializeComponent();
+        }
+
+        private void ExitBtn_Click(object sender, RoutedEventArgs e)
+        {
+            new LoginWindow().Show();
+            Close();
         }
     }
 }
