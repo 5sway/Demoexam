@@ -74,6 +74,7 @@ namespace DemoExam
                 IsBlocked = false
             };
             db.User.Add(newUser);
+            db.SaveChanges();
         }
     }
 }
